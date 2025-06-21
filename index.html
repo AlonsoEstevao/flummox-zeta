@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Anúncios</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#4f46e5">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .fade-in { animation: fadeIn 0.5s ease-in-out; }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-800 dark:text-gray-200 flex items-center justify-center min-h-screen p-4">
+
+    <div class="w-full max-w-lg mx-auto bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 md:p-8">
+        <input type="hidden" id="priceModel" value="">
+        <div class="text-center mb-6">
+            <h1 class="text-3xl font-bold text-gray-800 dark:text-white">Gerador de Anúncios 📢</h1>
+            <p class="text-gray-500 dark:text-gray-400 mt-2">Crie anúncios para WhatsApp de forma rápida e eficaz.</p>
+        </div>
+        <div class="mb-8 border-b dark:border-gray-700 pb-8 fade-in">
+            <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-3 text-center">✨ Preenchimento Automático</h2>
+            <p class="text-gray-500 dark:text-gray-400 mb-4 text-sm text-center">Cole o texto do produto da Shopee para preencher os campos.</p>
+            <div>
+                <label for="shopeeMessage" class="sr-only">Mensagem da Shopee</label>
+                <textarea id="shopeeMessage" rows="5" placeholder="Cole aqui o texto copiado da Shopee..." class="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all"></textarea>
+            </div>
+            <div class="flex items-center space-x-2 mt-4">
+                <button id="parseBtn" class="w-full bg-amber-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-amber-600 focus:outline-none focus:ring-4 focus:ring-amber-500 focus:ring-opacity-50 transition-transform transform hover:scale-105"><i class="fas fa-wand-magic-sparkles mr-2"></i> Analisar e Preencher</button>
+                <button id="clearParseBtn" class="bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-200 font-bold py-3 px-5 rounded-xl hover:bg-gray-400 dark:hover:bg-gray-500 focus:outline-none focus:ring-4 focus:ring-gray-400 focus:ring-opacity-50 transition-transform transform hover:scale-105" title="Limpar campo"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="parseFeedback" class="text-center text-sm mt-3 font-medium" style="min-height: 20px;"></div>
+        </div>
+        <h2 class="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4 text-center">Ou preencha manualmente</h2>
+        <div class="space-y-4">
+            <div>
+                <label for="productName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Nome do Produto</label>
+                <input type="text" id="productName" placeholder="Ex: Celular iPhone 16 128GB" class="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+            </div>
+             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label for="productOldPrice" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preço Antigo / Final</label>
+                    <input type="number" id="productOldPrice" placeholder="Opcional. Ex: 6100.00" class="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                </div>
+                <div>
+                    <label for="productPrice" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Preço Novo / Inicial</label>
+                    <input type="number" id="productPrice" placeholder="Ex: 4089.00" class="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+                </div>
+            </div>
+            <div class="border-t dark:border-gray-700 pt-4 mt-4">
+                <div class="flex items-center space-x-3">
+                    <input type="checkbox" id="hasCouponDiscount" class="h-5 w-5 rounded text-indigo-600 focus:ring-indigo-500 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700">
+                    <label for="hasCouponDiscount" class="font-medium text-gray-700 dark:text-gray-300">Desconto com cupom?</label>
+                </div>
+                <div id="couponDetails" class="hidden space-y-4 mt-4 p-4 bg-indigo-50 dark:bg-gray-800 border border-indigo-200 dark:border-gray-700 rounded-lg">
+                     <div>
+                        <label for="couponValue" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Valor do Cupom</label>
+                        <input type="text" id="couponValue" placeholder="Ex: 15% OFF ou R$20" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                     <div>
+                        <label for="couponLink" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Link do Cupom</label>
+                        <input type="text" id="couponLink" placeholder="Cole o link para pegar o cupom" class="w-full px-4 py-3 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    </div>
+                </div>
+            </div>
+             <div>
+                <label for="productLink" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Link do Produto</label>
+                <input type="text" id="productLink" placeholder="https://sualoja.com/produto" class="w-full px-4 py-3 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all">
+            </div>
+        </div>
+        <div class="mt-8">
+            <button id="generateBtn" class="w-full bg-indigo-600 text-white font-bold py-3 px-4 rounded-xl hover:bg-indigo-700 focus:outline-none focus:ring-4 focus:ring-indigo-500 focus:ring-opacity-50 transition-transform transform hover:scale-105"><i class="fas fa-magic mr-2"></i> Gerar Mensagem</button>
+        </div>
+        <div id="resultArea" class="mt-8 hidden">
+            <label for="generatedMessage" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Sua mensagem está pronta:</label>
+            <div class="relative">
+                <textarea id="generatedMessage" rows="14" readonly class="w-full p-4 bg-gray-100 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-xl resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+                <button id="copyBtn" class="absolute top-3 right-3 text-gray-500 dark:text-gray-400 hover:text-indigo-600 dark:hover:text-indigo-400" title="Copiar Mensagem"><i class="fas fa-copy fa-lg"></i></button>
+            </div>
+            <div id="copyFeedback" class="text-center text-green-500 mt-2 font-medium" style="display: none;">Mensagem copiada! ✅</div>
+            <button id="shareBtn" class="w-full mt-4 bg-green-500 text-white font-bold py-3 px-4 rounded-xl hover:bg-green-600 focus:outline-none focus:ring-4 focus:ring-green-500 focus:ring-opacity-50 transition-transform transform hover:scale-105"><i class="fab fa-whatsapp mr-2"></i> Compartilhar no WhatsApp</button>
+        </div>
+    </div>
+    
+    <script>
+        // --- Elementos do DOM ---
+        const productNameInput = document.getElementById('productName');
+        const productOldPriceInput = document.getElementById('productOldPrice');
+        const productPriceInput = document.getElementById('productPrice');
+        const productLinkInput = document.getElementById('productLink');
+        const generateBtn = document.getElementById('generateBtn');
+        const resultArea = document.getElementById('resultArea');
+        const generatedMessageTextarea = document.getElementById('generatedMessage');
+        const copyBtn = document.getElementById('copyBtn');
+        const shareBtn = document.getElementById('shareBtn');
+        const copyFeedback = document.getElementById('copyFeedback');
+        const shopeeMessageTextarea = document.getElementById('shopeeMessage');
+        const parseBtn = document.getElementById('parseBtn');
+        const clearParseBtn = document.getElementById('clearParseBtn');
+        const parseFeedback = document.getElementById('parseFeedback');
+        const hasCouponDiscount = document.getElementById('hasCouponDiscount');
+        const couponDetails = document.getElementById('couponDetails');
+        const couponValueInput = document.getElementById('couponValue');
+        const couponLinkInput = document.getElementById('couponLink');
+        const priceModelInput = document.getElementById('priceModel');
+        
+        // --- Funções Auxiliares ---
+        function formatCurrency(value) {
+            if (isNaN(value) || value === null || value === '') return '';
+            return parseFloat(value).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        }
+        
+        function showModal(message) {
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 w-full max-w-sm text-center fade-in">
+                    <h3 class="text-lg font-bold mb-4 text-gray-800 dark:text-white">Atenção!</h3>
+                    <p class="text-gray-700 dark:text-gray-300 mb-6">${message}</p>
+                    <button onclick="this.parentElement.parentElement.remove()" class="bg-indigo-600 text-white px-4 py-2 rounded-lg">OK</button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+        
+        function showFeedback(message, type) {
+            parseFeedback.textContent = message;
+            parseFeedback.className = `text-center text-sm mt-3 font-medium fade-in ${type === 'success' ? 'text-green-500' : 'text-red-500'}`;
+            setTimeout(() => { parseFeedback.textContent = ''; }, 4000);
+        }
+
+        // --- Gera a mensagem personalizada ---
+        function generateMessage() {
+            const product = productNameInput.value.trim();
+            const oldPrice = productOldPriceInput.value.trim();
+            const price = productPriceInput.value.trim();
+            const link = productLinkInput.value.trim();
+            const couponValue = couponValueInput.value.trim();
+            const couponLink = couponLinkInput.value.trim();
+            const useCoupon = hasCouponDiscount.checked && couponValue && couponLink;
+            const priceModel = priceModelInput.value;
+
+            if (!product || !price || !link) {
+                showModal("Por favor, preencha o Nome, Preço Novo/Inicial e Link do produto.");
+                return;
+            }
+             if (hasCouponDiscount.checked && (!couponValue || !couponLink)) {
+                showModal("Para desconto com cupom, preencha o Valor e o Link do cupom.");
+                return;
+            }
+            if (priceModel === 'faixaDePreco' && !oldPrice) {
+                showModal("Para faixa de preço, o preço final também é necessário.");
+                return;
+            }
+
+            const fOldPrice = formatCurrency(oldPrice);
+            const fPrice = formatCurrency(price);
+            
+            const footer = `\n\n⚠️ _Promoção sujeita à alteração de preço e estoque do App._`;
+
+            const dePorTemplates = [
+                () => `🔥 *${product}*\n\nDe ${fOldPrice}\n💰 Por *${fPrice}* 😱\n\n🛒 Compre agora 👉 ${link}${footer}`,
+                () => `🔥 *${product}*\n\nAntes: ${fOldPrice}\nAgora: *${fPrice}* ✨\n\n🛒 Compre agora 👉 ${link}${footer}`,
+                () => `🔥 *${product}*\n\nValor: ~${fOldPrice}~\nOFERTA: *${fPrice}* 💥\n\n🛒 Compre agora 👉 ${link}${footer}`,
+                () => `🔥 *${product}*\n\n❌ ${fOldPrice}\n✅ *${fPrice}*\n\n🛒 Compre agora 👉 ${link}${footer}`
+            ];
+
+            const aPartirDeTemplates = [
+                () => `🔥 *${product}*\n\n💰 Por apenas *${fPrice}*!\n\n🛒 Compre agora 👉 ${link}${footer}`,
+                () => `🔥 *${product}*\n\n✨ A partir de *${fPrice}*.\n\n🛒 Compre agora 👉 ${link}${footer}`,
+                () => `🔥 *${product}*\n\nValor: *${fPrice}* 🎯\n\n🛒 Compre agora 👉 ${link}${footer}`,
+                () => `🔥 *${product}*\n\n💎 A partir de *${fPrice}*!\n\n🛒 Compre agora 👉 ${link}${footer}`
+            ];
+
+            const faixaDePrecoTemplates = [
+                 () => `🔥 *${product}*\n\n💰 Preços de *${fPrice}* a *${fOldPrice}*!\n\n🛒 Compre agora 👉 ${link}${footer}`,
+                 () => `🔥 *${product}*\n\n✨ Varia de *${fPrice}* a *${fOldPrice}*.\n\n🛒 Compre agora 👉 ${link}${footer}`,
+                 () => `🔥 *${product}*\n\n💎 Valores entre *${fPrice}* e *${fOldPrice}*.\n\n🛒 Compre agora 👉 ${link}${footer}`
+            ];
+
+            const cupomTemplates = [
+                () => `🔥 *${product}*\n\n💰 Por *${fPrice}*\n🎟️ Use o cupom de *${couponValue}*!\n\n1. Cupom: ${couponLink}\n2. Produto: ${link}${footer}`,
+                () => `🔥 *${product}*\n\n💰 Por *${fPrice}*\n🎟️ Cupom disponível: *${couponValue}*.\n\n➡️ Link do cupom: ${couponLink}\n🛒 Link do produto: ${link}${footer}`,
+                () => `🔥 *${product}*\n\nDe ${fOldPrice} por *${fPrice}*.\n🎟️ Aplique o cupom de *${couponValue}*!\n\n1. Cupom: ${couponLink}\n2. Produto: ${link}${footer}`,
+                () => `🔥 *${product}*\n\n💰 Por *${fPrice}* COM CUPOM\n\n🎟️ Cupom: ${couponLink}\n🛒 Produto: ${link}${footer}`,
+                () => `🔥 *${product}*\n\n💰 Preços de *${fPrice}* a *${fOldPrice}*.\n🎟️ Use também o cupom de *${couponValue}*!\n\n1. Cupom: ${couponLink}\n2. Produto: ${link}${footer}`
+            ];
+
+            let chosenTemplate;
+
+            if (useCoupon) {
+                if (priceModel === 'faixaDePreco' && oldPrice) {
+                    chosenTemplate = cupomTemplates[4]; 
+                } else if (oldPrice) {
+                    chosenTemplate = cupomTemplates[2]; 
+                } else {
+                    const availableCupomTemplates = [cupomTemplates[0], cupomTemplates[1], cupomTemplates[3]];
+                    chosenTemplate = availableCupomTemplates[Math.floor(Math.random() * availableCupomTemplates.length)];
+                }
+            } else if (priceModel === 'faixaDePreco' && oldPrice) {
+                chosenTemplate = faixaDePrecoTemplates[Math.floor(Math.random() * faixaDePrecoTemplates.length)];
+            } else if (oldPrice) {
+                chosenTemplate = dePorTemplates[Math.floor(Math.random() * dePorTemplates.length)];
+            } else {
+                chosenTemplate = aPartirDeTemplates[Math.floor(Math.random() * aPartirDeTemplates.length)];
+            }
+            
+            const message = chosenTemplate();
+            
+            generatedMessageTextarea.value = message;
+            resultArea.classList.remove('hidden');
+            resultArea.classList.add('fade-in');
+        }
+
+        function copyMessage() {
+            if (!generatedMessageTextarea.value) return;
+            generatedMessageTextarea.select();
+            generatedMessageTextarea.setSelectionRange(0, 99999); 
+            try {
+                document.execCommand('copy');
+                copyFeedback.style.display = 'block';
+                setTimeout(() => { copyFeedback.style.display = 'none'; }, 2000);
+            } catch (err) {
+                console.error('Falha ao copiar: ', err);
+                showModal('Não foi possível copiar a mensagem. Por favor, copie manualmente.');
+            } finally {
+                window.getSelection().removeAllRanges();
+            }
+        }
+
+        function shareOnWhatsApp() {
+            const message = generatedMessageTextarea.value;
+            if (message) {
+                const whatsappUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+                window.open(whatsappUrl, '_blank');
+            }
+        }
+        
+        // --- FUNÇÃO DE ANÁLISE ATUALIZADA ---
+        function parseAndFill() {
+            priceModelInput.value = ''; 
+            let text = shopeeMessageTextarea.value.trim();
+            if (!text) {
+                showFeedback('Por favor, cole uma mensagem para analisar.', 'error');
+                return;
+            }
+            const linkMatch = text.match(/(https?:\/\/\S+)/g); 
+            if (!linkMatch || linkMatch.length === 0) {
+                showFeedback('❌ Não foi possível encontrar um link no texto.', 'error');
+                return;
+            }
+            const productLink = linkMatch[linkMatch.length-1]; 
+            let processingText = text.replace(productLink, '').trim();
+
+            const priceMatches = processingText.match(/R\$[0-9,.]+/g) || [];
+            if (priceMatches.length === 0) {
+                showFeedback('❌ Não foi possível encontrar um preço (Ex: R$19,99).', 'error');
+                return;
+            }
+            priceMatches.forEach(p => { processingText = processingText.replace(p, ''); });
+            const prices = priceMatches.map(p => parseFloat(p.replace('R$', '').replace(/\./g, '').replace(',', '.')));
+            prices.sort((a, b) => a - b);
+            
+            productOldPriceInput.value = '';
+            productPriceInput.value = '';
+
+            const rangeRegex = /R\$[0-9,.]+\s*-\s*R\$[0-9,.]+/;
+            
+            if (prices.length >= 2 && rangeRegex.test(text)) {
+                 productPriceInput.value = prices[0];
+                 productOldPriceInput.value = prices[prices.length - 1];
+                 priceModelInput.value = 'faixaDePreco';
+            } else if (prices.length >= 2) {
+                 productPriceInput.value = prices[0];
+                 productOldPriceInput.value = prices[prices.length - 1];
+                 priceModelInput.value = 'dePor';
+            } else if (prices.length === 1) {
+                 productPriceInput.value = prices[0];
+                 priceModelInput.value = 'aPartirDe';
+            }
+
+            let productName = processingText.replace(/Dê uma olhada em/gi, '').replace(/\bpor\b/gi, '').replace(/Compre na Shopee agora!/gi, '').replace(/[0-9.,]+mil/gi, '').replace(/Avaliações|Vendido\(s\)|Denunciar/gi, '').replace(/[0-9.]+\s*$/, '').replace(/[.,!]\s*$/, '').replace(/\s\s+/g, ' ').trim();
+            
+            if(linkMatch.length > 1){
+                 const couponLinkMaybe = linkMatch[0];
+                 if(couponLinkMaybe !== productLink){
+                     hasCouponDiscount.checked = true;
+                     couponDetails.classList.remove('hidden');
+                     couponLinkInput.value = couponLinkMaybe;
+                 }
+            } else {
+                 hasCouponDiscount.checked = false;
+                 couponDetails.classList.add('hidden');
+                 couponValueInput.value = '';
+                 couponLinkInput.value = '';
+            }
+
+            productNameInput.value = productName;
+            productLinkInput.value = productLink;
+
+            showFeedback('✅ Campos preenchidos com sucesso!', 'success');
+        }
+
+        // --- LÓGICA DE EVENT LISTENERS CENTRALIZADA ---
+        document.addEventListener('DOMContentLoaded', () => {
+            parseBtn.addEventListener('click', parseAndFill);
+            generateBtn.addEventListener('click', generateMessage);
+            clearParseBtn.addEventListener('click', () => {
+                shopeeMessageTextarea.value = '';
+                shopeeMessageTextarea.focus();
+                priceModelInput.value = '';
+            });
+            hasCouponDiscount.addEventListener('change', () => {
+                couponDetails.classList.toggle('hidden', !hasCouponDiscount.checked);
+                if(hasCouponDiscount.checked) couponDetails.classList.add('fade-in');
+            });
+            copyBtn.addEventListener('click', copyMessage);
+            shareBtn.addEventListener('click', shareOnWhatsApp);
+        });
+
+    </script>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/service-worker.js').then(registration => {
+                    console.log('ServiceWorker registrado com sucesso: ', registration.scope);
+                }, err => {
+                    console.log('Registro do ServiceWorker falhou: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>
